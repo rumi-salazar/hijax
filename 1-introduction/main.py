@@ -22,11 +22,11 @@ def main(
     upscale: int = 1,
 ):
     # interpret rule
-    rule_uint8 = np.array(rule, dtype=np.uint8),
+    rule_uint8 = np.uint8(rule)
     rule_8bits = np.unpackbits(rule_uint8, bitorder='little')
     rule_table = rule_8bits.reshape(2,2,2)
     
-    print("rule", rule_uint8[0])
+    print("rule", rule_uint8)
     print("bits", rule_8bits)
     print("table:")
     for a, b, c in itertools.product([0, 1], repeat=3):
@@ -52,6 +52,8 @@ def main(
     )
     print("simulation complete! result shape", history.shape)
 
+    # todo: profile? tqdm?
+
     # render to screen
     if animate:
         print("rendering...")
@@ -72,9 +74,11 @@ def main(
         
 def simulate(
     rule_table: np.typing.NDArray,
-    init_state: np.typing.ArrayLike,
+    init_state: np.typing.NDArray,
     height: int,
 ) -> np.typing.NDArray:
+    # TODO: parse rule here?
+
     (width,) = init_state.shape
     history = np.zeros((height, width+2), dtype=np.uint8)
 
