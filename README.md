@@ -6,20 +6,143 @@ deep learning researchers.
 See the [course website](https://far.in.net/hijax) for details or to express
 interest.
 
-This repository holds code relevant to each session. It's currently under
-development.
-There is one folder for each session/project. There are three branches
-containing different versions of the projects in parallel.
+Contents of this repository
+---------------------------
 
-* `main`: contains the base code required for the start of each session.
-* `soln`: based on `main`, but including pre-worked solutions where
-  available.
-* `live`: based on `main`, in which the demonstrations will take place, with
-  the aim of resembling `soln` by the end of each session.
+This repository holds code relevant to each workshop. The code is currently
+under development. This section describes the structure I'm working towards.
 
-Participants are encouraged to fork this repository and work on their own
-solutions from `main`, comparing to the `soln` branch as necessary.
-Participants are also encouraged to implement their own projects and share
-them via keeping their forks public.
+There is one folder for each workshop in the
+  [syllabus](https://far.in.net/hijax#syllabus),
+numbered 1 through 9:
 
-Issues and pull requests are also welcome.
+* `1-introduction`: Cellular automata using `jax.random` and `jax.numpy`.
+
+* `2-autodiff`: Classic perceptron using `jax.grad`.
+
+* `3-deep-learning`: Multi-layer perceptron using `flax.linen` and `optax`.
+
+* `4-vectorisation`: CNN with minibatch SGD using `jax.vmap`.
+
+* `5-acceleration`: Bigger CNN using `jax.jit`.
+
+* `6-acceleration`: Byte transformer using `jax.jit`.
+
+* `7-looping`: Accelerated training loop using `jax.lax.scan`.
+
+* `8-branching`: RL environment using `jax.lax.cond` and `jax.lax.select`.
+
+* `9-looping`: PPO and GAE with `jax.lax.scan`.
+
+There are three branches containing different versions of the code in
+parallel.
+
+* `main` contains the base code and data required for the start of each
+  workshop (possibly empty).
+  This is the place to start if you are following along with the workshops.
+
+* `soln` contains pre-worked solutions to the workshops. (I can't guarantee
+  that these will always be figured out ahead of the workshop).
+
+* `live` contains the version of the code we write during the workshops.
+  There might sometimes be differences from `soln` based on discussions in
+  the workshop.
+
+There are additional branches for my own testing purposes, in various states
+of working order.
+
+Maintaining a fork of this repository
+-------------------------------------
+
+Participants are encouraged to maintain their own fork of this repository
+containing their solutions to each week's workshop exercises.
+
+To create and clone a fork, follow these steps:
+
+1.  **Create a fork:** 'Fork' this repository to create a copy of the
+    repository under your own GitHub profile.
+    You can create a fork with the 'fork' button or go to this URL:
+    [https://github.com/matomatical/hijax/fork](https://github.com/matomatical/hijax/fork).
+
+2.  **Clone into your environment:** Clone your forked repository into your
+    local environment:
+    ```
+    git clone git@github.com:YOUR_USERNAME/hijax.git --origin my-fork
+    ```
+
+    Note: Usually, the local version would refer to the GitHub repository
+    from which it was cloned as a **remote** called "origin". Use the option
+    `--origin my-fork` to change this name of this remote to "my-fork".
+    You can choose whatever name you like, to help you tell it apart from the
+    original version of the repository (see next step).
+
+3.  **Add a second remote:** add this GitHub repository to your local version
+    as a remote called "upstream":
+    ```
+    git remote add upstream git@github.com:matomatical/hijax.git
+    ```
+
+This setup will allow you to easily pull updates I add to this repository
+after your fork into your local version and push them to your fork.
+To get the latest updates from a branch of this repository (e.g. `main`) into
+a branch of your local repository, use the following commands:
+
+```
+# start in your local repository on the target branch
+git fetch upstream
+git merge upstream/main
+```
+
+Setting up your environment
+---------------------------
+
+The recommended approach for completing these workshops is to set up a
+dedicated virtual environment.
+Once you have a local copy of the repository, follow these steps to set up
+your environment:
+
+1.  Create a virtual environment:
+    ```
+    python3 -m venv hijax.venv
+    ```
+    (You can run this command wherever you like, I normally run it inside the
+    repository root. The repository is set up to ignore contents with name
+    `*.venv`).
+
+2.  (Each time you want to work in the virtual environment)
+    Activate the virtual environment:
+    ```
+    source hijax.venv/bin/activate
+    ```
+    (You may consider adding an alias to your shell config such as
+    `activate-hijax=source "/path/to/hijax.venv/bin/activate"`)
+
+3.  Install the regular python dependencies. This list may grow in future
+    weeks---install missing dependencies as needed.
+    ```
+    pip install --upgrade pip
+    pip install numpy
+    pip install pillow
+    pip install flax
+    pip install optax
+    ```
+
+4.  The command for installing JAX depends on whether you want to compile to
+    CPU, GPU or TPU. Follow the instructions on the jax website:
+    https://jax.readthedocs.io/en/latest/installation.html
+
+Whenever you are done with your virtual environment, you can leave it using
+the command `deactivate`. You'll then have to repeat step (2) again next
+time. You won't have to repeat steps (1), (3) or (4).
+
+
+Course participants
+-------------------
+
+The following public repositories showcase the work of course participants.
+
+* [Example] Matthew Farrugia-Roberts's fork:
+  https://github.com/matomatical/hijax
+
+Participants are encouraged to create a pull request from their fork to this
+repository appending a link to their fork to the above list.
