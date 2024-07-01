@@ -2,32 +2,33 @@
 Elementary cellular automata simulator in numpy.
 """
 
+
 import itertools
+import pathlib
 import time
 from typing import Literal, Optional
 
 import numpy as np
 from PIL import Image
+import tqdm
 
 
 def main(
-    rule: np.uint8 = 110,
+    rule: np.uint8 = np.uint8(110),
     width: int = 32,
     height: int = 32,
     init: Literal["random", "middle"] = "middle",
     seed: int = 42,
     animate: bool = True,
     fps: None | float = None,
-    save_image: None | str = None,
+    save_image: None | pathlib.Path = None,
     upscale: int = 1,
 ):
     # interpret rule
-    rule_uint8 = np.uint8(rule)
-    rule_8bits = np.unpackbits(rule_uint8, bitorder='little')
-    rule_table = rule_8bits.reshape(2,2,2)
-    
-    print("rule", rule_uint8)
-    print("bits", rule_8bits)
+    rule_bits = np.unpackbits(rule, bitorder='little')
+    rule_table = rule_bits.reshape(2, 2, 2)
+    print("rule:", rule)
+    print("bits:", rule_bits)
     print("table:")
     for a, b, c in itertools.product([0, 1], repeat=3):
         print(' ', a, b, c, "->", rule_table[a, b, c])
@@ -45,14 +46,16 @@ def main(
 
     # conduct the simulation
     print("simulating...")
+    start_time = time.perf_counter()
     history = simulate(
-        rule_table=rule_table,
+        rule=rule,
         init_state=state,
         height=height,
     )
-    print("simulation complete! result shape", history.shape)
-
-    # todo: profile? tqdm?
+    end_time = time.perf_counter()
+    print("simulation complete!")
+    print("result shape", history.shape)
+    print("time taken", end_time - start_time, "seconds")
 
     # render to screen
     if animate:
@@ -73,13 +76,17 @@ def main(
 
         
 def simulate(
-    rule_table: np.typing.NDArray,
-    init_state: np.typing.NDArray,
+    rule: np.uint8,
+    init_state: np.typing.ArrayLike,    # int8[width]
     height: int,
-) -> np.typing.NDArray:
-    # TODO: parse rule here?
-
+) -> np.typing.NDArray:                 # int8[height, width]
+    # parse input
+    rule_table = np.unpackbits(rule, bitorder='little').reshape(2,2,2)
+    init_state = np.asarray(init_state)
     (width,) = init_state.shape
+
+    # accumulate output into this array
+    # extra width is to implement wraparound with slicing
     history = np.zeros((height, width+2), dtype=np.uint8)
 
     # first row
@@ -88,7 +95,7 @@ def simulate(
     history[0, -1] = init_state[0]
     
     # remaining rows
-    for step in range(1, height):
+    for step in tqdm.trange(1, height):
         # apply rules
         history[step, 1:-1] = rule_table[
             history[step-1, 0:-2],
@@ -99,6 +106,7 @@ def simulate(
         history[step, 0] = history[step, -2]
         history[step, -1] = history[step, 1]
 
+    # return a view of the array without the width padding
     return history[:, 1:-1]
 
 
