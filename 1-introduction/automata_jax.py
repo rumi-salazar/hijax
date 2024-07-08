@@ -1,5 +1,5 @@
 """
-Elementary cellular automata simulator in numpy.
+Elementary cellular automata simulator in jax.
 """
 
 
@@ -7,13 +7,14 @@ import functools
 import itertools
 import pathlib
 import time
-from typing import Literal, Optional
+from typing import Literal
+
+import numpy as np
+from PIL import Image
 
 import jax
 import jax.numpy as jnp
-import numpy as np
 import einops
-from PIL import Image
 
 
 def main(
@@ -46,12 +47,12 @@ def main(
             key = jax.random.key(seed)
             state = jax.random.randint(
                 key=key,
-                shape=(width,),
                 minval=0,
-                maxval=2,
+                maxval=2, # not included
+                shape=(width,),
                 dtype=jnp.uint8,
             )
-    print("initial state")
+    print("initial state:")
     print(state, state.dtype)
 
     omnisim = jax.vmap(

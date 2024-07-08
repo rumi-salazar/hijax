@@ -1,5 +1,5 @@
 """
-Elementary cellular automata simulator in numpy.
+Elementary cellular automata simulator in jax.
 """
 
 
@@ -8,9 +8,12 @@ import pathlib
 import time
 from typing import Literal
 
-import numpy as np
+# import numpy as np
 from PIL import Image
 import tqdm
+
+import jax
+import jax.numpy as jnp
 
 
 def main(
@@ -33,14 +36,19 @@ def main(
     print("initialising state...")
     match init:
         case "middle":
-            state = np.zeros(width, dtype=int)
-            state[width//2] = 1
+            state = jnp.zeros(width, dtype=int)
+            state = state.at[width//2].set(1)
         case "random":
-            np.random.seed(seed)
-            state = np.random.randint(
-                low=0,
-                high=2, # not included
-                size=(width,),
+
+            # jnp.random.seed(seed) # wrong: it's jax.random not
+            # jax.numpy.random
+            key = jax.random.key(seed)
+            key, key_to_be_used = jax.random.split(key)
+            state = jax.random.randint(
+                key=key_to_be_used,
+                minval=0,
+                maxval=2, # not included
+                shape=(width,),
                 dtype=int,
             )
     print("initial state:", state)
@@ -70,43 +78,43 @@ def main(
             .repeat(upscale, axis=0)
             .repeat(upscale, axis=1)
         )
-        Image.fromarray(history_upscaled).save(save_image)
+        Image.fromarray(np.asarray(history_upscaled)).save(save_image)
 
         
 def simulate(
     rule: int,
-    init_state: np.typing.ArrayLike,    # int[width]
+    init_state: jax.Array,    # int[width]
     height: int,
-) -> np.typing.NDArray:                 # int[height, width]
+) -> jax.Array:               # int[height, width]
     # parse rule
-    rule_uint8 = np.uint8(rule)
-    rule_bits = np.unpackbits(rule_uint8, bitorder='little')
+    rule_uint8 = jnp.uint8(rule)
+    rule_bits = jnp.unpackbits(rule_uint8, bitorder='little')
     rule_table = rule_bits.reshape(2,2,2)
 
-    # parse initial state
-    init_state = np.asarray(init_state)
-    (width,) = init_state.shape
+    # pad initial state
+    state = jnp.pad(init_state, 1, mode='wrap')
 
-    # accumulate output into this array
-    # extra width is to implement wraparound with slicing
-    history = np.zeros((height, width+2), dtype=int)
+    # accumulate states into this list
+    history = []
 
     # first row
-    history[0, 1:-1] = init_state
-    history[0, 0] = init_state[-1]
-    history[0, -1] = init_state[0]
+    history.append(state)
     
     # remaining rows
     for step in tqdm.trange(1, height):
-        # apply rules
-        history[step, 1:-1] = rule_table[
-            history[step-1, 0:-2],
-            history[step-1, 1:-1],
-            history[step-1, 2:],
-        ]
-        # sync edges
-        history[step, 0] = history[step, -2]
-        history[step, -1] = history[step, 1]
+        state = jnp.pad(
+            rule_table[
+                state[0:-2],
+                state[1:-1],
+                state[2:],
+            ],
+            1,
+            mode='wrap',
+        )
+        history.append(state)
+
+    # compile the states into a single array
+    history = jnp.stack(history)
 
     # return a view of the array without the width padding
     return history[:, 1:-1]
