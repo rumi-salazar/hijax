@@ -119,16 +119,29 @@ your environment:
 
 3.  Install the regular python dependencies. This list may grow in future
     weeks---install missing dependencies as needed.
-    ```
-    pip install --upgrade pip
-    pip install numpy
-    pip install pillow
-    pip install flax
-    pip install optax
-    ```
 
-4.  The command for installing JAX depends on whether you want to compile to
-    CPU, GPU or TPU. Follow the instructions on the jax website:
+    * Start by upgrading `pip`:
+      ```
+      pip install --upgrade pip
+      ```
+    
+    * Then some basics for array manipulation:
+      ```
+      pip install numpy einops
+      ```
+
+    * Some tools for visualisation and monitoring:
+      ```
+      pip install pillow tqdm
+      ```
+      
+    * Some deep learning libraries that work on top of JAX:
+      ```
+      pip install flax optax
+      ```
+
+4.  The command for installing JAX itself depends on whether you want to
+    compile to CPU, GPU or TPU. Follow the instructions on the jax website:
     https://jax.readthedocs.io/en/latest/installation.html
 
 Whenever you are done with your virtual environment, you can leave it using
