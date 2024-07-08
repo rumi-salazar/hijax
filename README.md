@@ -130,9 +130,9 @@ your environment:
       pip install numpy einops
       ```
 
-    * Some tools for visualisation and monitoring:
+    * Some tools for launching, visualising, and monitoring experiments:
       ```
-      pip install pillow tqdm
+      pip install tyro pillow tqdm
       ```
       
     * Some deep learning libraries that work on top of JAX:
