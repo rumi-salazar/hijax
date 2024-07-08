@@ -22,6 +22,8 @@ def main(
     height: int = 32,
     init: Literal["random", "middle"] = "middle",
     seed: int = 42,
+    animate: bool = True,
+    fps: None | float = None,
     save_image: None | pathlib.Path = None,
     upscale: int = 1,
 ):
@@ -61,15 +63,23 @@ def main(
     print("result shape", histories.shape)
     print(f"time taken {end_time - start_time:.4f} seconds")
         
-    histories_arranged = einops.rearrange(
-        histories,
-        '(r1 r2) h w -> (r1 h) (r2 w)',
-        r1=16,
-        r2=16,
-    )
+    if animate:
+        print("rendering...")
+        for i, history in enumerate(histories):
+            print("rule", i)
+            for row in history:
+                print(''.join(["█░"[s]*2 for s in row]))
+                if fps is not None: time.sleep(1/fps)
+            if fps is not None: time.sleep(1/fps)
 
     if save_image is not None:
         print("rendering to", save_image, "...")
+        histories_arranged = einops.rearrange(
+            histories,
+            '(r1 r2) h w -> (r1 h) (r2 w)',
+            r1=16,
+            r2=16,
+        )
         histories_greyscale = 255 * (1-histories_arranged)
         histories_upscaled = (histories_greyscale
             .repeat(upscale, axis=0)
