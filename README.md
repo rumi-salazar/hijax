@@ -16,23 +16,23 @@ There is one folder for each workshop in the
   [syllabus](https://far.in.net/hijax#syllabus),
 numbered 1 through 9:
 
-* `1-introduction`: Cellular automata using `jax.random` and `jax.numpy`.
+* `workshop1`: Cellular automata using `jax.random` and `jax.numpy`.
 
-* `2-autodiff`: Classic perceptron using `jax.grad`.
+* `workshop2`: Classic perceptron using `jax.grad`.
 
-* `3-deep-learning`: Multi-layer perceptron using `flax.linen` and `optax`.
+* `workshop3`: Multi-layer perceptron using `flax.linen` and `optax`.
 
-* `4-vectorisation`: CNN with minibatch SGD using `jax.vmap`.
+* `workshop4`: CNN with minibatch SGD using `jax.vmap`.
 
-* `5-acceleration`: Bigger CNN using `jax.jit`.
+* `workshop5`: Bigger CNN using `jax.jit`.
 
-* `6-acceleration`: Byte transformer using `jax.jit`.
+* `workshop6`: Byte transformer using `jax.jit`.
 
-* `7-looping`: Accelerated training loop using `jax.lax.scan`.
+* `workshop7`: Accelerated training loop using `jax.lax.scan`.
 
-* `8-branching`: RL environment using `jax.lax.cond` and `jax.lax.select`.
+* `workshop8`: RL environment using `jax.lax.cond` and `jax.lax.select`.
 
-* `9-looping`: PPO and GAE with `jax.lax.scan`.
+* `workshop9`: PPO and GAE with `jax.lax.scan`.
 
 There are three branches containing different versions of the code in
 parallel.
