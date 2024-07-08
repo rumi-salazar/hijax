@@ -39,9 +39,6 @@ def main(
             state = jnp.zeros(width, dtype=int)
             state = state.at[width//2].set(1)
         case "random":
-
-            # jnp.random.seed(seed) # wrong: it's jax.random not
-            # jax.numpy.random
             key = jax.random.key(seed)
             key, key_to_be_used = jax.random.split(key)
             state = jax.random.randint(
@@ -55,7 +52,10 @@ def main(
 
     print("simulating automaton...")
     start_time = time.perf_counter()
-    history = simulate(
+    history = jax.jit(
+        simulate,
+        static_argnames=('height',),
+    )(
         rule=rule,
         init_state=state,
         height=height,
@@ -89,31 +89,31 @@ def simulate(
     # parse rule
     rule_uint8 = jnp.uint8(rule)
     rule_bits = jnp.unpackbits(rule_uint8, bitorder='little')
-    rule_table = rule_bits.reshape(2,2,2)
+    rule_table = rule_bits.reshape(2,2,2).astype(int)
 
-    # parse initial state
-    (width,) = init_state.shape
+    # pad initial state
+    init_state = jnp.pad(init_state, 1, mode='wrap')
 
-    # accumulate output into this array
-    # extra width is to implement wraparound with slicing
-    history = jnp.zeros((height, width+2), dtype=int)
-
-    # first row
-    history = history.at[0, 1:-1].set(init_state)
-    history = history.at[0, 0].set(init_state[-1])
-    history = history.at[0, -1].set(init_state[0])
-    
-    # remaining rows
-    for step in tqdm.trange(1, height):
-        # apply rules
-        history = history.at[step, 1:-1].set(rule_table[
-            history[step-1, 0:-2],
-            history[step-1, 1:-1],
-            history[step-1, 2:],
-        ])
-        # sync edges
-        history = history.at[step, 0].set(history[step, -2])
-        history = history.at[step, -1].set(history[step, 1])
+    def step(prev_state, _input):
+        next_state = jnp.pad(
+            rule_table[
+                prev_state[0:-2],
+                prev_state[1:-1],
+                prev_state[2:],
+            ],
+            1,
+            mode='wrap',
+        )
+        return next_state, next_state
+    final_state, history_except_first = jax.lax.scan(
+        step,
+        init_state,
+        jnp.zeros(height-1),
+    )
+    history = jnp.concatenate(
+        [init_state[jnp.newaxis, :], history_except_first],
+        axis=0,
+    )
 
     # return a view of the array without the width padding
     return history[:, 1:-1]
