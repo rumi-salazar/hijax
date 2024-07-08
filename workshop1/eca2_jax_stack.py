@@ -36,7 +36,7 @@ def main(
     print("initialising state...")
     match init:
         case "middle":
-            state = jnp.zeros(width, dtype=int)
+            state = jnp.zeros(width, dtype=jnp.uint8)
             state = state.at[width//2].set(1)
         case "random":
             # jnp.random.seed(seed) # wrong: it's jax.random not
@@ -48,7 +48,7 @@ def main(
                 minval=0,
                 maxval=2, # not included
                 shape=(width,),
-                dtype=int,
+                dtype=jnp.uint8,
             )
     print("initial state:", state)
 
@@ -82,9 +82,9 @@ def main(
         
 def simulate(
     rule: int,
-    init_state: jax.Array,    # int[width]
+    init_state: jax.Array,    # uint8[width]
     height: int,
-) -> jax.Array:               # int[height, width]
+) -> jax.Array:               # uint8[height, width]
     # parse rule
     rule_uint8 = jnp.uint8(rule)
     rule_bits = jnp.unpackbits(rule_uint8, bitorder='little')

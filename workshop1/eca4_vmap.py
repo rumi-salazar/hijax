@@ -28,7 +28,7 @@ def main(
     print("initialising state...")
     match init:
         case "middle":
-            state = jnp.zeros(width, dtype=int)
+            state = jnp.zeros(width, dtype=jnp.uint8)
             state = state.at[width//2].set(1)
         case "random":
             key = jax.random.key(seed)
@@ -38,7 +38,7 @@ def main(
                 minval=0,
                 maxval=2, # not included
                 shape=(width,),
-                dtype=int,
+                dtype=jnp.uint8,
             )
     print("initial state:", state)
 
@@ -60,16 +60,16 @@ def main(
     print("simulation complete!")
     print("result shape", histories.shape)
     print(f"time taken {end_time - start_time:.4f} seconds")
+        
+    histories_arranged = einops.rearrange(
+        histories,
+        '(r1 r2) h w -> (r1 h) (r2 w)',
+        r1=16,
+        r2=16,
+    )
 
     if save_image is not None:
         print("rendering to", save_image, "...")
-        # histories_arranged = histories.reshape(256*height, width)
-        histories_arranged = einops.rearrange(
-            histories,
-            '(r1 r2) h w -> (r1 h) (r2 w)',
-            r1=16,
-            r2=16,
-        )
         histories_greyscale = 255 * (1-histories_arranged)
         histories_upscaled = (histories_greyscale
             .repeat(upscale, axis=0)
@@ -80,13 +80,13 @@ def main(
         
 def simulate(
     rule: int,
-    init_state: jax.Array,    # int[width]
+    init_state: jax.Array,    # uint8[width]
     height: int,
-) -> jax.Array:               # int[height, width]
+) -> jax.Array:               # uint8[height, width]
     # parse rule
     rule_uint8 = jnp.uint8(rule)
     rule_bits = jnp.unpackbits(rule_uint8, bitorder='little')
-    rule_table = rule_bits.reshape(2,2,2).astype(int)
+    rule_table = rule_bits.reshape(2,2,2)
 
     # pad initial state
     init_state = jnp.pad(init_state, 1, mode='wrap')

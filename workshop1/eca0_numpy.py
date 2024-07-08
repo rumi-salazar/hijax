@@ -33,7 +33,7 @@ def main(
     print("initialising state...")
     match init:
         case "middle":
-            state = np.zeros(width, dtype=int)
+            state = np.zeros(width, dtype=np.uint8)
             state[width//2] = 1
         case "random":
             np.random.seed(seed)
@@ -41,7 +41,7 @@ def main(
                 low=0,
                 high=2, # not included
                 size=(width,),
-                dtype=int,
+                dtype=np.uint8,
             )
     print("initial state:", state)
 
@@ -75,21 +75,21 @@ def main(
         
 def simulate(
     rule: int,
-    init_state: np.typing.ArrayLike,    # int[width]
+    init_state: np.typing.ArrayLike,    # uint8[width]
     height: int,
-) -> np.typing.NDArray:                 # int[height, width]
+) -> np.typing.NDArray:                 # uint8[height, width]
     # parse rule
     rule_uint8 = np.uint8(rule)
     rule_bits = np.unpackbits(rule_uint8, bitorder='little')
     rule_table = rule_bits.reshape(2,2,2)
 
     # parse initial state
-    init_state = np.asarray(init_state)
+    init_state = np.asarray(init_state, dtype=np.uint8)
     (width,) = init_state.shape
 
     # accumulate output into this array
     # extra width is to implement wraparound with slicing
-    history = np.zeros((height, width+2), dtype=int)
+    history = np.zeros((height, width+2), dtype=np.uint8)
 
     # first row
     history[0, 1:-1] = init_state
