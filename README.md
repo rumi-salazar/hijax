@@ -158,6 +158,8 @@ The following public repositories showcase the work of course participants.
   https://github.com/matomatical/hijax
 * Rohan Hitchcock's fork: 
   https://github.com/rohan-hitchcock/hijax
+* Rumi Salazar's fork:
+  https://github.com/rumi-salazar/hijax
 
 Participants are encouraged to create a pull request from their fork to this
 repository appending a link to their fork to the above list.
