@@ -9,9 +9,9 @@ interest.
 <table>
 <tbody>
   <tr>
-    <td><img src="demos/workshop1.png" alt="workshop 1 visualisation" height="60ch"></td>
-    <td><img src="demos/workshop2.gif" alt="workshop 2 visualisation" height="60ch"></td>
-    <td><img src="demos/workshop3.gif" alt="workshop 3 visualisation" height="60ch"></td>
+    <td><img src="demos/workshop1.png" alt="workshop 1" height="200px"></td>
+    <td><img src="demos/workshop2.gif" alt="workshop 2" height="200px"></td>
+    <td><img src="demos/workshop3.gif" alt="workshop 3" height="200px"></td>
   </tr>
   <tr>
     <td><!--workshop 4--></td>
