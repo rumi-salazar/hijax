@@ -11,7 +11,7 @@ interest.
   <tr>
     <td><img src="demos/workshop1.png" alt="workshop 1 visualisation"></td>
     <td><img src="demos/workshop2.gif" alt="workshop 2 visualisation"></td>
-    <td><!--workshop 3--></td>
+    <td><img src="demos/workshop3.gif" alt="workshop 3 visualisation"></td>
   </tr>
   <tr>
     <td><!--workshop 4--></td>
