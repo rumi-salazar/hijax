@@ -40,7 +40,7 @@ numbered 1 through 9:
 
 * `workshop2`: Classic perceptron using `jax.grad`.
 
-* `workshop3`: Multi-layer perceptron using `flax.linen` and `optax`.
+* `workshop3`: Multi-layer perceptron using `equinox` and `optax`.
 
 * `workshop4`: CNN with minibatch SGD using `jax.vmap`.
 
@@ -157,7 +157,7 @@ your environment:
       
     * Some deep learning libraries that work on top of JAX:
       ```
-      pip install flax optax
+      pip install equinox optax
       ```
 
 4.  The command for installing JAX itself depends on whether you want to
