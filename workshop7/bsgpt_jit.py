@@ -504,7 +504,7 @@ def cross_entropy_distr(
 
 @jax.jit
 def batch_cross_entropy_distr(
-    true_distrs: Int[Array, "... v"],
+    true_distrs: Float[Array, "... v"],
     pred_distrs: Float[Array, "... v"],
 ) -> Float[Array, "..."]:
     batched = jnp.vectorize(cross_entropy_distr, signature='(v),(v)->()')
