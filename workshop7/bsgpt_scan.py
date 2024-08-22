@@ -1,6 +1,6 @@
 """
 Bitesized GPT character model for next-char-prediction based on the Holmesian
-canon. Accelerated with jax.jit.
+canon. Accelerated with jax.jit and jax.lax.scan.
 """
 
 import functools
@@ -291,7 +291,7 @@ class DecodeTransformerBlock:
 class DecodeTransformerParams:
     token_embedding: LinearTransformParams
     postn_embedding: LinearTransformParams
-    blocks: list[DecodeTransformerBlockParams]
+    blocks: DecodeTransformerBlockParams # DecodeTransformerBlockParams[num_blocks]
     unembedding_layernorm: LayerNormParams
     unembedding: AffineTransformParams
 
@@ -324,10 +324,11 @@ class DecodeTransformer:
         return DecodeTransformerParams(
             token_embedding=self.token_embedding.init(k1),
             postn_embedding=self.postn_embedding.init(k2),
-            blocks=[
-                self.transformer_block.init(k3i)
-                for k3i in jax.random.split(k3, self.num_blocks)
-            ],
+            blocks=jax.vmap(
+                self.transformer_block.init,
+            )(
+                jax.random.split(k3, self.num_blocks),
+            ),
             unembedding_layernorm=self.unembedding_layernorm.init(k4),
             unembedding=self.unembedding.init(k5),
         )
@@ -345,8 +346,11 @@ class DecodeTransformer:
         x_position = p.postn_embedding.weights[:context_length, :]
         x = x_semantic + x_position                         # -> t embed_size
         # apply the num_blocks attention blocks in sequence
-        for block_params in p.blocks:
-            x = self.transformer_block(block_params, x)     # -> t embed_size
+        x, _ = jax.lax.scan(
+            lambda x, p: (self.transformer_block(p, x), None),
+            x,
+            p.blocks,
+        )
         # unembedding: transform back to predicted next token probs
         x_norm = self.unembedding_layernorm(p.unembedding_layernorm, x)
         logits = self.unembedding(p.unembedding, x_norm)    # -> t vocab
@@ -410,6 +414,7 @@ class ByteSequenceModel:
         return batched(p, byte_arrays)
 
 
+    @functools.partial(jax.jit, static_argnames=["self", "num_tokens_out"])
     def complete(
         self,
         p: ByteSequenceModelParams,
@@ -428,9 +433,14 @@ class ByteSequenceModel:
         # loop across buffer
         keys_next_token = jax.random.split(key, num_tokens_out)
         los = jnp.arange(num_tokens_out)
-        for lo, key_next_token in zip(los, keys_next_token):
+        def predict_next_token(buffer, lo_and_key):
+            lo, key_next_token = lo_and_key
             # slice window
-            window = buffer[lo:lo+self.max_context_length]
+            window = jax.lax.dynamic_slice(
+                buffer,
+                (lo,),
+                (self.max_context_length,),
+            )
             # predict next token
             prob_next_token = self.forward(p, window)[-1]
             next_token = jax.random.choice(
@@ -441,8 +451,14 @@ class ByteSequenceModel:
             ).astype(dtype=jnp.uint8)
             # add token to buffer
             buffer = buffer.at[lo+self.max_context_length].set(next_token)
+            return buffer, next_token 
+        buffer, tokens_out = jax.lax.scan(
+            predict_next_token,
+            buffer,
+            (los, keys_next_token),
+        )
         # return completion
-        tokens_out = buffer[-num_tokens_out:]
+        # tokens_out = buffer[-num_tokens_out:]
         return tokens_out
 
 
@@ -630,11 +646,10 @@ def main(
     )(bigram_stats, bigram_stats)
     print("  bigram entropy:", bigram_entropy)
 
- 
-    print("training loop...")
-    train_steps = tqdm.trange(num_steps)
-    metrics = collections.defaultdict(list)
-    for step in train_steps:
+    print("defining training step...")
+    @jax.jit
+    def train_step(carry, _):
+        params, opt_state, key = carry
         # sample a batch of sequences
         key_batch, key = jax.random.split(key)
         batch_ids = jax.random.choice(
@@ -654,8 +669,25 @@ def main(
         # compute update, update optimiser and model
         updates, opt_state = optimiser.update(grads, opt_state, params)
         params = optax.apply_updates(params, updates)
+
+        return (params, opt_state, key), train_loss 
+ 
+    print("training loop...")
+    train_steps = tqdm.trange(
+        0,
+        num_steps,
+        num_steps_per_vis,
+        unit_scale=num_steps_per_vis,
+    )
+    metrics = collections.defaultdict(list)
+    for step in train_steps:
+        (params, opt_state, key), train_losses = jax.lax.scan(
+            train_step,
+            (params, opt_state, key),
+            length=num_steps_per_vis,
+        )
         
-        metrics['train loss'].append((step, train_loss))
+        metrics['train loss'].extend([(step, l) for l in train_losses])
 
         if step % num_steps_per_vis == 0:
             # periodically compute additional metrics
